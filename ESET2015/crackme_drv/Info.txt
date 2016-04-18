@@ -1,0 +1,9 @@
+[*]	Never analyzed a driver before, I used IDA & Windbg to understand the flow, maybe there is a better method to do it, but slowly I solved it anyway.
+	The driver must be installed as legacy driver or using crackme_drv.inf. I used Windows XP in VirtualBox + Windbg connected through pipe to debug it.
+	To debug the driver at system start I put an INT3 "CC" breakpoint and Windbg stopped at it -> fixed with the original "E8" byte.
+	
+[*] There are 2 "commented" IDA databases (crackme_drv & VM).
+
+[*] There are some notes/logs taken during analysis of the driver.
+
+[*] The password2 is used to decrypt PunchCard.bmp used to solve .NET part.

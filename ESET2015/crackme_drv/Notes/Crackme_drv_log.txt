@@ -1,0 +1,581 @@
+Temporary file used while debugging crackme_drv with Windbg
+
+######################################### STRUCTURES #########################################
+
+DeviceObject STRUCT -> 0x8a21a030
+	0x00 Type             : 0n3
+	0x02 Size             : 0x150
+    0x04 ReferenceCount   : 0n0
+    0x08 DriverObject     : 0x8a1057a0 _DRIVER_OBJECT
+    0x0c NextDevice       : (null) 
+    0x10 AttachedDevice   : (null) 
+    0x14 CurrentIrp       : (null) 
+    0x18 Timer            : (null) 
+    0x1c Flags            : 0x2050
+    0x20 Characteristics  : 0x100
+    0x24 Vpb              : 0x8a380a50 _VPB
+    0x28 DeviceExtension  : 0x8a21a0e8 Void
+    0x2c DeviceType       : 7
+    0x30 StackSize        : 1 ''
+    0x34 Queue            : __unnamed
+    0x5c AlignmentRequirement : 0
+    0x60 DeviceQueue      : _KDEVICE_QUEUE
+    0x74 Dpc              : _KDPC
+    0x94 ActiveThreadCount : 0
+    0x98 SecurityDescriptor : 0xe101f170 Void
+    0x9c DeviceLock       : _KEVENT
+    0xac SectorSize       : 0x200
+    0xae Spare1           : 0
+    0xb0 DeviceObjectExtension : 0x8a21a180 _DEVOBJ_EXTENSION
+    0xb4 Reserved         : (null)
+END STRUCT
+
+DeviceExtension STRUCT
+	(size = 0x98)
+	0x00 DeviceObject : 0x8a21a030
+	0x04 OldDevice : 0x8a4d9730
+	0x08 TargetDevice : 0x8a4d9730
+	0x0c Unknown (Flag?) : (null) 0x0 (it is checked sometime
+	0x10 IO_REMOVE_LOCK : (null) RemoveLock
+		[IO_REMOVE_LOCK]
+			struct io_remove_lock {
+				BOOLEAN removed;
+				BOOLEAN reserved[3];
+				LONG io_count;
+				struct nt_event remove_event;
+			};
+		[IO_REMOVE_LOCK]
+	0x28 Unknown : 0x1 -> 0x2 (RemoveLockCounter)
+	0x2c Ram2 : 0x88305000
+	0x30 Size7 : 0x3c0
+	0x34 Size8 : 0x0
+	0x38 Size9 : 0xf8
+	0x3c Size6 : 0x2
+	0x40 Size5 : 0x20
+	0x44 Size4 : 0x200
+	0x48 Size1 (Ram2 size): 0x1e00000
+	0x4c Size2 : 0x200
+	0x50 Size3 : 0x2
+	0x5c SymbolicName
+	0x64 UntaggedPool1_Addr : 0x882f9000
+	0x68 UntaggedPool1_Size : 0x21ac
+	0x70 UntaggedPool2_Addr : 0x8a304d48
+	0x74 UntaggedPool2_Size : 0x2b5
+	0x6c Unknown : 0x0
+	0x78 Event1 : _KEVENT
+	0x88 ReferenceObject3
+	0x8c ReferenceObject4 
+	0x90 ReferenceObject1 
+	0x94 ReferenceObject2 
+END STRUCT
+
+DriverObject STRUCT -> 0x8a1057a0
+	0x00 Type             : 0n4
+	0x02 Size             : 0n168
+	0x04 DeviceObject     : 0x8a21a030 _DEVICE_OBJECT
+	0x08 Flags            : 0x12
+	0x0c DriverStart      : 0xb778e000
+	0x10 DriverSize       : 0xb000
+	0x14 DriverSection    : 0x8a109220
+	0x18 DriverExtension  : 0x8a105848 _DRIVER_EXTENSION
+	0x1c DriverName       : _UNICODE_STRING "\Driver\Crackme_drv"
+	0x24 HardwareDatabase : 0x80690b90 _UNICODE_STRING "\REGISTRY\MACHINE\HARDWARE\DESCRIPTION\SYSTEM"
+	0x28 FastIoDispatch   : (null) 
+	0x2c DriverInit       : 0xb7797197 = crackme_drv+0x9197
+	0x30 DriverStartIo    : (null) 
+	0x34 DriverUnload     : 0xb7797197 = crackme_drv+0x9197
+	0x38 MajorFunction    : [28]
+		[MajorFunction]
+			IRP_MJ_CREATE			: crackme_drv+0x8000 : 0x00
+			IRP_MJ_CLOSE 			: crackme_drv+0x8000 : 0x02
+			IRP_MJ_READ 			: crackme_drv+0x29f0 : 0x03
+			IRP_MJ_WRITE 			: crackme_drv+0x29f0 : 0x04
+			IRP_MJ_DEVICE_CONTROL 	: crackme_drv+0x27d0 : 0x0e
+			IRP_MJ_POWER 			: crackme_drv+0x1890 : 0x16
+			IRP_MJ_SYSTEM_CONTROL 	: crackme_drv+0x1910 : 0x17
+			IRP_MJ_MAXIMUM_FUNCTION : crackme_drv+0x1540 : 0x1b
+		[MajorFunction]
+END STRUCT
+
+DriverExtension STRUCT
+	0x000 DriverObject     : 0x8a1057a0 _DRIVER_OBJECT
+    0x004 AddDevice        : 0xb778f150 = crackme_drv+0x1150
+    0x008 Count            : 0
+    0x00c ServiceKeyName   : _UNICODE_STRING "Crackme_drv"
+    0x014 ClientDriverExtension : 0x8a3b2d88 _IO_CLIENT_EXTENSION
+    0x018 FsFilterCallbacks : (null)
+END STRUCT
+
+DriverObjectExtension STRUCT -> 0x8a3b2d90
+[UNICODE_STRING]
+	0x0	Length (reg_path_unicode_string)
+	0x2 MaximumLength (reg_path_unicode_string)
+	0x4 Buffer (Ram1)
+[UNICODE_STRING]
+0x8 Unknown : 0x1 (AddDeviceCompleted = TRUE ?)
+END STRUCT
+
+######################################### POOLS #########################################
+
+Ram1 POOL -> 0xe1659d68
+	0x0 reg_path_unicode_string = "\REGISTRY\MACHINE\SYSTEM\ControlSet001\Services\Crackme_drv\"
+END POOL
+
+Ram2 POOL -> 0x88305000
+[MEMORY]
+ -> 88305000  eb 3c 90 45 73 65 74 52 61 6d 20 00 02 02 01 00  .<.EsetRam .....
+	88305010  01 00 02 00 f0 f8 78 00 20 00 02 00 00 00 00 00  ......x. .......
+	88305020  00 00 00 00 00 00 29 78 56 34 12 6b 73 69 44 6d  ......)xV4.ksiDm
+	88305030  61 52 20 20 20 20 46 41 54 31 36 20 20 20 00 00  aR    FAT16   ..
+	88305040  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+	---------------------------------------------------------------------------
+ -> 883051fe  55 aa f8 ff ff ff 00 00 00 00 00 00 00 00 00 00  U...............
+	8830520e  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+	---------------------------------------------------------------------------
+ -> 88314200  53 4d 2d 44 52 4d 41 52 49 56 45 08 00 00 00 00  SM-DRMARIVE.....
+	88314210  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+[MEMORY]
+END POOL
+
+UntaggedPool1 POOL -> 0x882f9000
+	Size : 0x21ac
+	Type : NonPagedPoolBase
+	[MEMORY]
+		.\dumps\UntaggedPool1_encrypted.bin
+		.\dumps\UntaggedPool1_decrypted.bin
+	[MEMORY]
+	TempPool : TempPool1
+END POOL
+
+TempPool1 POOL -> 0x8a369bf8
+	Size : 0x408
+	Type : NonPagedPoolBase
+	[MEMORY]
+		DWORD1_Index
+		DWORD2_Index
+		BYTES [0x400]
+		.\dumps\TempPool1_1.bin
+		.\dumps\TempPool1_2.bin
+	[MEMORY]
+END POOL
+
+UntaggedPool2 POOL -> 0x8a304d48
+	Size : 0x2b5
+	Type : NonPagedPoolBase
+	[MEMORY]
+		WORD Value	: 13 37 -> 'leet'
+		WORD Size	: 0x2b5
+		.\dumps\UntaggedPool2_encrypted.bin
+		.\dumps\UntaggedPool2_decrypted.bin
+	[MEMORY]
+	TempPool : TempPool2
+END POOL
+
+TempPool2 POOL -> 0x8a3608d0
+	Size : 0x408
+	Type : NonPagedPoolBase
+	[MEMORY]
+		DWORD1_Index
+		DWORD2_Index
+		BYTES [0x400]
+		.\dumps\TempPool2_1.bin
+		.\dumps\TempPool2_2.bin
+	[MEMORY]
+END POOL
+
+UntaggedPool3 POOL -> 0x8a14d220
+	Size : 0x9
+	Type : NonPagedPoolBase
+	[MEMORY]
+		[Encrypted]
+			8a14d220 9c 86 cd bb 8e 8c 7d 1c  ......}.
+			8a14d228 c3 00 00 00 00 00 00 00  ........
+		[Decrypted]
+			8a14d220 45 53 45 54 43 6f 6e 73  ESETCons
+			8a14d228 74 00 00 00 00 00 00 00  t.......
+	[MEMORY]
+END POOL
+
+TempPool3 POOL -> 0x8810a008
+	Size : 0x408
+	Type : NonPagedPoolBase
+	[MEMORY]
+		DWORD1_Index
+		DWORD2_Index
+		BYTES [0x400]
+		.\dumps\TempPool3_1.bin
+		.\dumps\TempPool3_2.bin
+	[MEMORY]
+END POOL
+
+UntaggedPool4 POOL -> 0xe12d3250
+	Size : 0x28
+	Type : "1"
+	[MEMORY]
+		e12d3250 00 00 00 00 01 00 00 00  ........
+		e12d3258 1c 00 00 00 45 00 53 00  ....E.S.
+		e12d3260 45 00 54 00 56 00 61 00  E.T.V.a.
+		e12d3268 6c 00 75 00 65 00 54 00  l.u.e.T.
+		e12d3270 65 00 73 00 74 00 00 00  e.s.t...
+	[MEMORY]
+	[_KEY_VALUE_PARTIAL_INFORMATION]
+		0x0 TitleIndex : (null)
+		0x4 Type : 0x1
+		0x8 DataLength : 0x1c
+		0xc Data[0x1c] : "E.S.E.T.V.a.l.u.e.T.e.s.t." = 
+			45 00 53 00 45 00 54 00 56 00
+			61 00 6c 00 75 00 65 00 54 00
+			65 00 73 00 74 00 00 00
+	[_KEY_VALUE_PARTIAL_INFORMATION]
+END POOL
+
+UntaggedPool5 POOL -> 0x8a38ecb0
+	Size : 0x1c
+	Type : NonPagedPoolBase
+	[MEMORY]
+		8a38ecb0 45 00 53 00 45 00 54 00  E.S.E.T.
+		8a38ecb8 56 00 61 00 6c 00 75 00  V.a.l.u.
+		8a38ecc0 65 00 54 00 65 00 73 00  e.T.e.s.
+		8a38ecc8 74 00 00 00
+	[MEMORY]
+END POOL
+
+UntaggedPool6 POOL -> 0x88346410
+	Size : 0x48
+	Type : NonPagedPoolBase
+	
+END POOL
+
+\Device\45736574 STRUCT -> 0xf78de9c8
+[UNICODE_STRING]
+	0x0	Length (device_path_unicode_string)
+	0x2 MaximumLength (device_path_unicode_string)
+	0x4 Buffer (\Device\45736574)
+[UNICODE_STRING]
+END STRUCT
+
+UntaggedPool7 POOL -> 0x8a43dd48
+	Size : 0x2b5
+	Type : NonPagedPoolBase
+	[MEMORY]
+		
+	[MEMORY]
+END POOL
+
+UntaggedPool8 POOL -> 0x87d5e000
+	Size : 0x400000
+	Type : NonPagedPoolBase
+	[MEMORY]
+	[MEMORY]
+END POOL
+
+######################################### THREADS #########################################
+
+PsCreateSystemThread1 CALL
+	ThreadHandle : 0xf78de9d4
+	DesiredAccess : 0x0
+	ObjectAttributes : ObjAttr1 (0xf78de9b0)
+	ProcessHandle : 0x0
+	ClientId : 0x0
+	StartRoutine : crackme_drv+0x1f20
+	StartContext : (DeviceObject) 0x8a21a030
+	--------------------------------------------
+	ObReferenceObjectByHandle :
+		ObjectPointer : DeviceExtension+0x90
+		ThreadHandle : 0x80000904
+END CALL
+
+PsCreateSystemThread2 CALL
+	ThreadHandle : 0xf78de9d0
+	DesiredAccess : 0x0
+	ObjectAttributes : ObjAttr2 (0xf78de998)
+	ProcessHandle : 0x0
+	ClientId : 0x0
+	StartRoutine : crackme_drv+0x22f0
+	StartContext : (DeviceObject) 0x8a21a030
+	--------------------------------------------
+	ObReferenceObjectByHandle :
+		ObjectPointer : DeviceExtension+0x94
+		ThreadHandle : 0xf78de9d0
+END CALL
+
+PsCreateSystemThread3 CALL
+	ThreadHandle : 0xba7f7d84
+	DesiredAccess : 0x0
+	ObjectAttributes : ObjAttr4 (0xba7f7d10)
+	ProcessHandle : 0x0
+	ClientId : 0x0
+	StartRoutine : crackme_drv+0x2670
+	StartContext : (DeviceObject) 0x8a21a030
+	--------------------------------------------
+	ObReferenceObjectByHandle :
+		ObjectPointer : DeviceExtension+0x88
+		ThreadHandle : 0xba7f7d84
+END CALL
+
+PsCreateSystemThread4 CALL
+	ThreadHandle : 0xba7f7d80
+	DesiredAccess : 0x0
+	ObjectAttributes : ObjAttr5 (0xba7f7d60)
+	ProcessHandle : 0x0
+	ClientId : 0x0
+	StartRoutine : crackme_drv+0x19e0
+	StartContext : (DeviceObject) 0x8a21a030
+	--------------------------------------------
+	ObReferenceObjectByHandle :
+		ObjectPointer : DeviceExtension+0x8c
+		ThreadHandle : 0xba7f7d80
+END CALL
+
+######################################### OBJECT_ATTRIBUTES #########################################
+
+ObjAttr1 OBJECT_ATTRIBUTE -> 0xf78de9b0
+[_OBJECT_ATTRIBUTES]
+	0x00 Length           : 0x18
+	0x04 RootDirectory    : (null) 
+	0x08 ObjectName       : (null) 
+	0x0c Attributes       : 0x200
+	0x10 SecurityDescriptor : (null) 
+	0x14 SecurityQualityOfService : (null)
+[_OBJECT_ATTRIBUTES]
+END OBJECT_ATTRIBUTE
+
+ObjAttr2 OBJECT_ATTRIBUTES -> 0xf78de998
+[_OBJECT_ATTRIBUTES]
+	0x00 Length           : 0x18
+	0x04 RootDirectory    : (null) 
+	0x08 ObjectName       : (null) 
+	0x0c Attributes       : 0x200
+	0x10 SecurityDescriptor : (null) 
+	0x14 SecurityQualityOfService : (null)
+[_OBJECT_ATTRIBUTES]
+END OBJECT_ATTRIBUTES
+
+ObjAttr3 OBJECT_ATTRIBUTES -> 0xba7f7d48
+[_OBJECT_ATTRIBUTES]
+	0x00 Length           : 0x18
+	0x04 RootDirectory    : (null) 
+	0x08 ObjectName       : Unicode1 (0xba7f7d20) "\DosDevices\Pipe\EsetCrackmePipe"
+	0x0c Attributes       : 0x40
+	0x10 SecurityDescriptor : (null) 
+	0x14 SecurityQualityOfService : (null)
+[_OBJECT_ATTRIBUTES]
+END OBJECT_ATTRIBUTES
+
+ObjAttr4 OBJECT_ATTRIBUTES -> 0xba7f7d10
+[_OBJECT_ATTRIBUTES]
+	0x00 Length           : 0x18
+	0x04 RootDirectory    : (null) 
+	0x08 ObjectName       : (null)
+	0x0c Attributes       : 0x200
+	0x10 SecurityDescriptor : (null) 
+	0x14 SecurityQualityOfService : (null)
+[_OBJECT_ATTRIBUTES]
+END OBJECT_ATTRIBUTES
+
+ObjAttr5 OBJECT_ATTRIBUTES -> 0xba7f7d60
+[_OBJECT_ATTRIBUTES]
+	0x00 Length           : 0x18
+	0x04 RootDirectory    : (null) 
+	0x08 ObjectName       : (null)
+	0x0c Attributes       : 0x200
+	0x10 SecurityDescriptor : (null) 
+	0x14 SecurityQualityOfService : (null)
+[_OBJECT_ATTRIBUTES]
+END OBJECT_ATTRIBUTES
+
+ObjAttr6 OBJECT_ATTRIBUTES -> 
+[_OBJECT_ATTRIBUTES]
+	0x00 Length           : 0x18
+	0x04 RootDirectory    : (null) 
+	0x08 ObjectName       : Unicode3 (0xb324cb88) "\REGISTRY\MACHINE\SYSTEM\ControlSet001\Services\Crackme_drv\EsetCrackme"
+	0x0c Attributes       : 0x0
+	0x10 SecurityDescriptor : (null) 
+	0x14 SecurityQualityOfService : (null)
+[_OBJECT_ATTRIBUTES]
+END OBJECT_ATTRIBUTES
+
+######################################### FILE #########################################
+
+FileHandle1 FILE
+	hFile : 0xba7f7da8
+	ObjectAttributes : ObjAttr3
+END FILE
+
+######################################### PIPE_MSG #########################################
+
+MSG1 = 0xAA02
+MSG2 = 0xAA10
+MSG3 = 0xAA06
+
+######################################### LOCKS #########################################
+
+IoAcquireRemoveLockEx1 LOCK
+	File : 0xb7792124
+END LOCK
+
+######################################### EVENTS #########################################
+
+Event1 EVENT
+[_DISPATCHER_HEADER]
+	0x000 Type             : 0 ''
+	0x001 Absolute         : 0 ''
+	0x002 Size             : 0x4 ''
+	0x003 Inserted         : 0 ''
+	0x004 SignalState      : 0n0
+	0x008 WaitListHead     : _LIST_ENTRY [ 0x8a21a168 - 0x8a21a168 ]
+[_DISPATCHER_HEADER]
+END EVENT
+
+Event2 EVENT
+[_DISPATCHER_HEADER]
+	0x00 Type             : 0x30 '0'
+    0x01 Absolute         : 0 ''
+    0x02 Size             : 0 ''
+    0x03 Inserted         : 0 ''
+    0x04 SignalState      : 0n-1978189464
+    0x08 WaitListHead     : _LIST_ENTRY [ 0x8a1057a0 - 0x8a1738b0 ]
+[_DISPATCHER_HEADER]
+END EVENT
+
+######################################### IRPS #########################################
+
+Irp is active with 2 stacks 2 is current (= 0x8a173944)
+ No Mdl: No System Buffer: Thread 8a4f03a0:  Irp stack trace.  
+Flags = 00000000
+ThreadListEntry.Flink = 8a4f05b0
+ThreadListEntry.Blink = 8a4f05b0
+IoStatus.Status = c00000bb
+IoStatus.Information = 00000000
+RequestorMode = 00000000
+Cancel = 00
+CancelIrql = 0
+ApcEnvironment = 00
+UserIosb = f78dea64
+UserEvent = f78dea54
+Overlay.AsynchronousParameters.UserApcRoutine = 00000000
+Overlay.AsynchronousParameters.UserApcContext = 00000000
+Overlay.AllocationSize = 00000000 - 00000000
+CancelRoutine = 00000000   
+UserBuffer = 00000000
+&Tail.Overlay.DeviceQueueEntry = 8a1738f0
+Tail.Overlay.Thread = 8a4f03a0
+Tail.Overlay.AuxiliaryBuffer = 00000000
+Tail.Overlay.ListEntry.Flink = 00000000
+Tail.Overlay.ListEntry.Blink = 00000000
+Tail.Overlay.CurrentStackLocation = 8a173944
+Tail.Overlay.OriginalFileObject = 00000000
+Tail.Apc = 00000000
+Tail.CompletionKey = 00000000
+     cmd  flg cl Device   File     Completion-Context
+ [  0, 0]   0  0 00000000 00000000 00000000-00000000    
+
+			Args: 00000000 00000000 00000000 00000000
+>[ 1b, 0]   0  0 8a21a030 00000000 00000000-00000000    
+	       \Driver\Crackme_drv
+			Args: 00000000 00000000 00000000 00000000
+
+######################################### MISC #########################################
+
+Tail.Overlay.CurrentStackLocation_minus_20 ADDR
+	0x03 Flag : 0xe0
+	0x1c RoutineAddr : crackme_drv+0x1940
+	0x20 Event : Event2
+END ADDR
+
+MdlAddressStruct MDL
+	0x00 Next             : (null) 
+    0x04 Size             : 0n32
+    0x06 MdlFlags         : 0n138 (0x8a)
+    0x08 Process          : (null) 
+    0x0c MappedSystemVa   : 0x8812794c Void
+    0x10 StartVa          : 0x8810b000 Void
+    0x14 ByteCount        : 0x200
+    0x18 ByteOffset       : 0
+END MDL
+
+MmMapLockedPagesSpecifyCache1 STRUCT
+	0x0 BaseAddress : 0xb495c000
+END STRUCT
+
+MmMapLockedPagesSpecifyCache2 STRUCT
+	0x0 BaseAddress : 0xf7ac1000
+END STRUCT
+
+######################################### STRINGS #########################################
+
+Unicode1 UNICODE_STRING -> 0xba7f7d20
+	0x00 Length           : 0x40
+    0x02 MaximumLength    : 0x42
+    0x04 Buffer           : 0xb7792228  "\DosDevices\Pipe\EsetCrackmePipe"
+END UNICODE_STRING
+
+Unicode2 UNICODE_STRING -> 0xb77954f8
+	0x00 Length           : 0x12
+    0x02 MaximumLength    : 0x14
+    0x04 Buffer           : 0xe1777280  "ESETConst"
+END UNICODE_STRING
+
+Unicode3 UNICODE_STRING -> 0xb324cb88
+	0x00 Length           : 0x8e
+    0x02 MaximumLength    : 0x200
+    0x04 Buffer           : 0xb324cba8  "\REGISTRY\MACHINE\SYSTEM\ControlSet001\Services\Crackme_drv\EsetCrackme"
+END UNICODE_STRING
+
+Ansi1 ANSI_STRING -> 0xb324cb80
+	0x0 Length : 0xe
+	0x2 MaximumLength : 0xf
+	0x4 Buffer : Pointer to "ESETValueTest" (0xe1986350)
+END ANSI_STRING
+
+######################################### TO-DO #########################################
+
+1) Check that ESETConst UNICODE_STRING does not changes length -> "bp crackme_drv+0x1bbf" to fix manually
+2) Check at crackme_drv+0x2c3a (402c40) ESET_FLAG_1 == 0x1 & ESET_FLAG_2 == 0x1 (b77954f0 & b77954f1)
+3) 18 calls to IRP_READ & 7 calls to IRP_WRITE to check and understand
+	"bp crackme_drv+0x2c6e" -> IRP_MJ_READ -> Hidden path!
+	"bp crackme_drv+0x29f0" -> Routine start
+	"bp crackme_drv+0x2b9c" -> MappedSystemVa check
+	"bp crackme_drv+0x2c25" -> IRP_TYPE check
+	"bp crackme_drv+0x2d0e" -> IRP_WRITE found
+	"bp crackme_drv+0x2c40" -> value_0x13200 check
+	"bp crackme_drv+0x2c66" -> .writemem C:\Users\Matteo\MappedSystemVa*.bin eax size
+	"bp crackme_drv+0x2d2c" -> .writemem C:\Users\Matteo\Write*.bin eax size
+
+######################################### FILL AT RUNTIME TO FOLLOW THE FLOW #########################################
+
+DeviceObject 		: 0x8a3336a8
+DeviceExtension 	: 0x8a333760
+IRP					: 0x88199cd8
+_IO_STACK_LOCATION	: 0x88199d6c
+MappedSystemVa		: 0xb4f6f000
+					: 0xb4f6b000
+					: 0xf7ab7000
+					: 0xf7ab6000
+					: 0xf7ab5000
+					: 0xb4f15000
+					: 0xf7ac0000
+					: 0xf7abc000
+					: 0xf7abf000
+					: 0xf7ab2000
+					: 0xf7abd000
+					: 0xf7abe000
+					: 0xf7a55000
+					: 0xf7a53000
+					: 0xf7a59000
+					: 0xb493b000
+					: 0xf7ac2000
+					: 0xb4938000
+WriteVa				: 0x88433000
+					: 0xMissed
+					: 0x88456200 
+					: 0xMissed
+					: 0x88433200
+					: 0xMissed
+					: 0xMissed
+					: 0xMissed
+Ram2_address		: 0x88433000
+UntaggedPool1_addr	: 0x88303000
+UntaggedPool2_addr	: 0x8a3662c8
+UntaggedPool7_addr	: 0x8a43dd48
+UntaggedPool8_addr	: 0x87d5e000

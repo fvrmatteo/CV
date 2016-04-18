@@ -1,0 +1,98 @@
+[*] The are 3 "commented" databases:
+	1) IDA database of the PE injected and executed into svchost.exe
+	2) udd OllyDbg database of the injected_svchost.exe PE
+	3) x64_dbg database of the EsetCrackme2015.exe/EsetCrackme2015.dll PE
+
+[*] svchost.exe injection: is carried out in a standard way, I put 2 breakpoints on: WriteProcessMemory & ResumeThread.
+	At the first WriteProcessMemory I set the OEP bytes (of the PE that is goint to be injected into svchost.exe) to EB FE (auto loop).
+	Then let svchost.exe injection execute and attach OllyDbg to svchost.exe -> F9 -> pause -> fix original bytes to E8 D7 -> analyze code.
+	One can actually dump the injected PE and analyze it as is, the dumped PE (svchost_injected.exe) is in the folder.
+
+[*] The injected PE setup the GUI, the callback routine for the password1 check and show the Dialog with the 3 passwords to be entered.
+	A little check for password1 is carried out by a CallbackRoutine set up in DialogGUISetup (at 0x40229A).
+	To retrieve the first password one has to analyze the CallbackRoutine, and below there is a little description:
+		1) the string "RFV1aV4fQ1FydFxk" is retrieved through the EsetCrackmePipe and saved;
+		2) filling the password1 TextBox will trigger the CallbackRoutine and some operations are done to the inserte password;
+		3) below there are some infos to retrieve the first password.
+
+[*] Example: the final modified base64 input password1 is calculated (in the CallbackRoutine) as:
+
+string input_password1 = "pollame";
+string base64_input_password1 = encodeBase64(input_password1); //cG9sbGFtZQ==
+string result = alternate_sub_add(base64_input_password1, true); //cF9rbFFsZP=<
+
+[*] So, starting from the string received through the pipe, we can decode password1 as:
+
+string password1 = "RFV1aV4fQ1FydFxk";
+string password1_add = alternate_sub_add(password1, false); //RGV2aW4gQ2FzdGxl
+string password1_decoded = decodeBase64(password1_add); //Devin Castle
+
+Function alternate_sub_add:
+
+#include <stdio.h>
+
+typedef enum { false, true } bool;
+
+//sub = true, add = false
+char *alternate_sub_add(char *input, bool sub_or_add) {
+	int i, len = strlen(input);
+	char *result = (char *)calloc(len + 1, sizeof(char));
+	for (i = 0; i < len; i++) {
+		result[i] = (i % 2) ? ((sub_or_add) ? (char)(input[i] - 1): (char)(input[i] + 1)) : input[i];
+	}
+	return result;
+}
+
+int main(void) {
+	char *sub = alternate_sub_add("cG9sbGFtZQ==", true), *add = alternate_sub_add("RFV1aV4fQ1FydFxk", false);
+	printf("alternate_sub(\"cG9sbGFtZQ==\") = %s\n", sub);
+	printf("alternate_add(\"RFV1aV4fQ1FydFxk\") = %s\n", add);
+	free(sub);
+	free(add);
+	getchar();
+	return 0;
+}
+
+[*] Extra string found analyzing the PEs: decodeBase64("SXJyZW4lMjBpc3QlMjBtZW5zY2hsaWNo") = Irren%20ist%20menschlich
+	(MVFVNFZQMTZ4ZDZ3av=)
+	
+[*] Read 3 buffers:
+		1) the hash of the 3 passwords
+		2) an encrypted string, actually the password1
+		3) the string "OK" at crackme close
+
+pipe_read_svchost_encrypted_0x7B.bin: size 0x7B
+
+68 7F 69 07 63 70 15 7C 16 7B 14 07 61 7F 16 77
+11 7E 67 74 11 7A 11 76 68 0F 16 73 65 7F 15 75
+65 79 12 07 61 71 68 77 50 79 16 76 60 78 68 74
+13 0F 63 04 69 71 65 72 63 7F 60 04 63 78 63 01
+12 70 65 01 65 08 61 73 69 0B 15 01 67 0A 13 76
+67 49 60 07 66 08 61 06 66 7F 65 74 14 78 15 07
+65 0B 14 77 61 0D 16 70 69 7B 61 77 66 78 66 7C
+67 08 11 74 65 70 63 07 67 0C 50 00
+
+pipe_read_svchost_decrypted_0x7B: size 0x7B
+
+38 36 39 42 33 39 45 39 46 32 44 42 31 36 46 32
+41 37 37 31 41 33 41 33 38 46 46 36 35 36 45 30
+35 30 42 42 31 38 38 32 00 30 46 33 30 31 38 31
+43 46 33 41 39 38 35 37 33 36 30 41 33 31 33 44
+42 39 35 44 35 41 31 36 39 42 45 44 37 43 43 33
+37 00 30 42 36 41 31 43 36 36 35 31 44 31 45 42
+35 42 44 32 31 44 46 35 39 32 31 32 36 31 36 39
+37 41 41 31 35 39 33 42 37 45 00 00
+
+ASCII representation pipe_read_svchost_decrypted_0x7B.bin:
+
+869B39E9F2DB16F2A771A3A38FF656E050BB1882.0F30181CF3A9857360A313DB95D5A169BED7CC37.0B6A1C6651D1EB5BD21DF5921261697AA1593B7E
+
+pipe_read_svchost_decrypted_0x11.bin: size 0x11
+
+52 46 56 31 61 56 34 66 51 31 46 79 64 46 78 6B 00
+
+ASCII representation pipe_read_svchost_decrypted_0x11.bin:
+
+RFV1aV4fQ1FydFxk -> derived from RGV2aW4gQ2FzdGxl = Base64(Devin Castle)
+
+[*] The insertion of the correct password in the TextBox will drop the driver (crackme_drv) to analyze. One can actually manually extract all the resources changing the compares/jumps.

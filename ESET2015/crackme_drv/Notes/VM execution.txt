@@ -1,0 +1,128 @@
+[INITIALIZATION]
+630 (addr(crackme_drv+0x7500) != NULL)
+760 (set offset at 0x8a) -> right path
+630 (checks if ESETConst.length != 0)
+760 (set offset at 0x11e) -> wrong path
+320 (retrieves & saves crackme_drv+0x7500)
+320 (adds 0x164 to UntaggedPool1_1+0x131 and saves it)
+320 (adds 0x164 to UntaggedPool1_1+0x131 and saves it)
+320 (retrieves & saves crackme_drv+0x7500) 
+840 (adds 0x12 to crackme_drv+0x7500)
+320 (retrieved pointer to bytes used in decryption)
+320 (adds 0x160 to UntaggedPool1_1+0x131 and saves it)
+840 (retrieves 0x12 at UntaggedPool1_1+0x131+0x160)
+320 (retrieves UntaggedPool1_1+0x131+0x137 -> "ETSE")
+840 (addr 0x4 to UntaggedPool1_1+0x131+0x137 -> after "ETSE")
+[INITIALIZATION]
+
+[BYTE GENERATION]
+630 (get crackme_drv+0x7500+0x12)
+760 (set offset 0x4b)
+630 (retrieves UntaggedPool1_1+0x131+0x137+0x4 -> checks if "ETSE" arrived at end)
+760 (set offset 0x5b)
+630 (retrieves UntaggedPool1_1+0x131+0x164+0x12 -> checks if "generated_bytes" arrived at end)
+760 (set offset 0x100)
+320 (get ESETConst.Value byte)
+840 (xor1 with decryption bytes)
+840 (result++)
+840 (getByte(calculateValue(result)) = result)
+840 (xor2)
+320 (copy decrypted)
+840 (crackme_drv+0x7500++ (ESETConst.Value++))
+840 (UntaggedPool1_1+0x131+0x164++ (decryption_bytes++))
+840 (UntaggedPool1_1+0x131+0x137++ (ETSE++))
+[BYTE GENERATION]
+
+[FULL GENERATION]
+760, 630, 760, 630, 760, 630, 760, 320, 840, 840, 840, 840, 320, 840, 840, 840
+760, 630, 760, 630, 760, 630, 760, 320, 840, 840, 840, 840, 320, 840, 840, 840
+760, 630, 760, 630, 760, 630, 760, 320, 840, 840, 840, 840, 320, 840, 840, 840
+760, 630, 760, 320 (rewind pointer to "ETSE"), 630, 760, 320 (get ESETConst.Value byte), 630, 760, 320 (retrieve 0x3 and saves it to generated_bytes), 840, 840, 840, 840, 320 (??), 840, 840, 840
+760, 630, 760, 630, 760, 630, 760, 320, 840, 840, 840, 840, 320, 840, 840, 840
+760, 630, 760, 630, 760, 630, 760, 320, 840, 840, 840, 840, 320, 840, 840, 840
+760, 630, 760, 630, 760, 630, 760, 320, 840, 840, 840, 840, 320, 840, 840, 840
+760, 630, 760, 320 (rewind pointer to "ETSE"), 630, 760, 320 (get ESETConst.Value byte), 630, 760, 320 (retrieve 0x74 and saves it to generated_bytes), 840, 840, 840, 840, 320 (??), 840, 840, 840
+760, 630, 760, 630, 760, 630, 760, 320, 840, 840, 840, 840, 320, 840, 840, 840
+760, 630, 760, 630, 760, 630, 760, 320, 840, 840, 840, 840, 320, 840, 840, 840
+760, 630, 760, 630, 760, 630, 760, 320, 840, 840, 840, 840, 320, 840, 840, 840
+760, 630, 760, 320 (rewind pointer to "ETSE"), 630, 760, 320 (get ESETConst.Value byte), 630, 760, 320 (retrieve 0xb5 and saves it to generated_bytes), 840, 840, 840, 840, 320, 840, 840, 840
+760, 630, 760, 630, 760, 630, 760, 320, 840, 840, 840, 840, 320, 840, 840, 840
+760, 630, 760, 630, 760, 630, 760, 320, 840, 840, 840, 840, 320, 840, 840, 840
+760, 630, 760, 630, 760, 630, 760, 320, 840, 840, 840, 840, 320, 840, 840, 840
+760, 630, 760, 320 (rewind pointer to "ETSE"), 630, 760, 320, 630, 760, 320, 840, 840, 840, 840, 320, 840, 840, 840
+760, 630, 760, 630, 760, 630, 760, 320, 840, 840, 840, 840, 320, 840, 840, 840
+[FULL GENERATION]
+
+[AFTER GENERATION]
+760 (set offset to 0x3f)
+630 (retrieved crackme_drv+0x7500+0x12 -> after ESETConst.Value -> checks if ESETConst.Value is come to an end)
+760 (set offset to 0x4b -> not setted)
+320 (get crackme_drv+0x7500 -> not saved)
+630 (get address after "ETSE" -> checks actual counter to "ETSE" -> not equals)
+760 (set offset to 0x5b)
+630 (get UntaggedPool1_1+0x131+0x164 -> checks if ended)
+760 (set offset to 0x100)
+320 (UntaggedPool1_1+0x131+0x160 -> saved into stack)
+320 (get 0x12 -> saved into stack)
+590 (saved 0x12 at 0x8810bff8)
+590 (saved 8819e29d  at 0x8810bff4)
+590 (saved 0x200 at 0x8810bff0)
+590 (saved 883a5200 at 0x8810bfec)
+e30 (create new pool with size 0x10 at 0x8a35dc60 -> copying some values like 0x883a5200, 0x200, 0x8819e29d, 0x12 in the new pool)
+[AFTER GENERATION]
+
+Using ESETConst.Value = "AAAAAAAAAAAAAAAA"
+
+60 29 20 2a 03 0f 31 3c 74 b5 02 0d b5 23 15 3b 2b 07
+
+-----------------------------------------------NEW STACK = 0xab7c10f0-----------------------------------------------
+
+UntaggedPool1_3: 0x8a2f4538 size: 0x137
+Copied 0x137 byte from UntaggedPool1_1+0x131 to UntaggedPool1_3
+UntaggedPool1_4: 0x8790c000 size 0x40000
+Saving UntaggedPool1_4+0x3ffffc = 0x87d0bffc
+
+[INITIALIZATION]
+320 (get UntaggedPool1_3 -> saved on stack)
+320 (getByte(UntaggedPool1_3) = 0x1c -> saved on stack)
+840 (UntaggedPool1_3++)
+320 (getByte(UntaggedPool1_3) = 0x48 -> saved on stack)
+840 (UntaggedPool1_3+=5)
+320 (getByte(UntaggedPool1_3) = 0x58 -> saved on stack)
+320 (retrieved 0x137 -> saved on stack)
+840 (UntaggedPool1_3+0x137 -> saved on stack)
+840 (UntaggedPool1_3+0x58 -> saved on stack)
+[INITIALIZATION]
+
+[BYTE GENERATION]
+320 (getByte(UntaggedPool1_3+0x58) = 0x17 -> saved on stack)
+840 (0x1c ^ 0x17 = 0xb)
+840 (0x48 + 0x1c = 0x64)
+320 (copy 0xb to UntaggedPool1_3+0x58)
+840 (UntaggedPool1_3+0x58++)
+630 (cmp_addr(UntaggedPool1_3+0x137, UntaggedPool1_3+0x58))
+760 (set offset to 0x1d)
+[BYTE GENERATION]
+
+[FULL GENERATION]
+320 (getByte(UntaggedPool1_3+0x58) = 0x4 -> saved on stack)
+840 (0x64 ^ 0x4 = 0x60)
+840 (0x64 + 0x48 = 0xac)
+320 (copy 0x60 to UntaggedPool1_3+0x58)
+840 (UntaggedPool1_3+0x58++)
+630 (cmp_addr(UntaggedPool1_3+0x137, UntaggedPool1_3+0x58))
+760 (set offset to 0x1d)
+
+320 (getByte(UntaggedPool1_3+0x58) = 0xac -> saved on stack)
+840
+840
+320
+840
+630
+760
+
+
+......
+[FULL GENERATION]
+
+UntaggedPool1_5: 0x8835b580 size 0x100

@@ -1,0 +1,242 @@
+Temporary file used while debugging VM with Windbg
+
+Called pushing:
+UntaggedPool1: 0x8838a000
+UntaggedPool2: 0x88389008
+Ram2+0x26000: 0x883b3000
+
+ARRIVED AT: Call_15, Call_16 (first time)
+Current StackBase: 0xab37d5b8
+Current StackBase: 0xab37d0f0
+
+----------------------------------------------------------
+
+crackme_drv+0x7500: ESETConst.Value = "ETSE", ESETConst.Length = 4
+
+----------------------------------------------------------
+Stack used by UntaggedPool1: Size = 0x470
+
+Stack start {
+	push ebp
+	mov ebp, esp
+	sub esp, 470h
+	lea ecx, [ebp-470h] ;pointer to stack base saved in ecx
+}
+
+Value_To_Add: 0x78389000 (used to generate the "called functions")
+UntaggedPool7: 0x881b8008
+UntaggedPool8: 0x87ced000 size 0x40000
+UntaggedPool9: 0x8a2aa250 size: 0x10 -> 8a2aa250: 0x883b3000 
+										8a2aa254: 0x200 
+										8a2aa258: 0x881b829d 
+										8a2aa25c: 0x12
+UntaggedPool10: 0x8820dc48 size: 0x137
+UntaggedPool11: 0x878ed000 size: 0x40000
+UntaggedPool12: 0x88225488 size 0x100
+UntaggedPool7+0x131+0x164 -> 0x68
+UntaggedPool8+0x3FFFFC ->	880ecfec: 0x883b3000 
+							880ecff0: 0x200 
+							880ecff4: 0x881b829d 
+							880ecff8: 0x12
+
+----------------------------------------------------------
+
+[STACK1]
+	address		value
+	{called functions start}
+		0x0			0x8838b300 -
+		0x1			0x8838b320 -
+		0x2			0x8838b3a0
+		0x3			0x8838b440
+		0x4			0x8838b590 -
+		0x5			0x8838b5f0
+		0x6			0x8838b630 -
+		0x7			0x8838b760 -
+		0x8			0x8838b7e0
+		0x9			0x8838b820
+		0xa			0x8838b840 -
+		0xb			0x8838bd50 -
+		0xc			0x8838bdd0 -
+		0xd			0x8838be30 -
+	{called functions end}
+	0x3fc		0x1 ;possbile FLAG -> moreCalls = true
+	0x3fd		0x881b8538 ;address of UntaggedPool1_1
+	0x401		0x2b5 ;size of UntaggedPool1_1
+	0x405		0x1	;possible FLAG
+	0x409		0x804d7000 ;ModuleBase_addr nt!_imp__VidInitialize <PERF>
+	0x40d		0x4 ;numero a caso, non so a cosa serva
+	0x411		0xab37da40 ;address to RAM2+0x26000 = 0x883b3000
+	0x415		0x0 ;possible FLAG -> ESETConst.Value != NULL
+	0x416		0x4b; 0x0e ^ 0x45 = 0x4b
+				0x0e; getByte(caculateValue(0x07, 0x1)) = 0x0e
+				0x07; 0x06 + 0x1 = 0x07
+				0x06; 0x65 ^ 0x63 = 0x06
+				0x65; fifth byte of ESETConst.Value
+				0x6c; 0x29 ^ 0x45 = 0x6c
+				0x29; getByte(calculateValue(0x94, 0x1)) = 0x29
+				0x94; 0x93 + 0x1 = 0x94
+				0x93; 0x64 ^ 0xf7 = 0x93
+				0x64; fourth byte of ESETConst.Value
+				-----------------------------------------------
+				0x64; 0x37 ^ 0x53 = 0x64
+				0x37; getByte(calculateValue(0x9b, 0x1)) = 0x37
+				0x9b; 0x9a + 0x1 = 0x9b
+				0x9a; 0x63 ^0xf9 = 0x9a
+				0x63; third byte of ESETConst.Value
+				-----------------------------------------------
+				0x6b; 0x3f ^ 0x54 = 0x6b
+				0x3f; getByte(calculateValue(0x9f, 0x1)) = 0x3f
+				0x9f; 0x9e + 0x1 = 0x9f
+				0x9e; 0x62 ^ 0xfc = 0x9e
+				0x62; second byte of ESETConst.Value
+				-----------------------------------------------
+				0x20; 0x65 ^ 0x45 = 0x20 (0x45 = "E" of "ETSE")
+				0x65; getByte(calulateValue(0xb2, 0x1)) = 0x65
+				0xb2; 0xb1 + 0x1 = 0xb2
+				0xb1; 0x61 ^ 0xd0 = 0xb1
+				0x61; first byte of ESETConst.Value
+				-----------------------------------------------
+				0x881b87c9; UntaggedPool1_1+0x131+0x160
+	0x41a		0x0
+	0x41b		0x0
+	0x41c		0x0
+	0x41d		0x0
+	0x41e		0xf76be503; crackme_drv+7500+0x3
+				0xf76be502; crackme_drv+7500+0x2
+				0xf76be501; crackme_drv+7500+0x1
+				0xf76be500; crackme_drv+7500 ESETConst.Value
+	0x422		0x881b8711; UntaggedPool1_1+0x131+0x164+0x4
+				0x881b8710; UntaggedPool1_1+0x131+0x164+0x3
+				0x881b87cf; UntaggedPool1_1+0x131+0x164+0x2
+				0x881b87ce; UntaggedPool1_1+0x131+0x164+0x1
+				0x881b87cd; UntaggedPool1_1+0x131+0x164
+	0x426		0x881b87a0; UntaggedPool1_1+0x131+0x137 -> "ETSE"
+				0x881b87a4; UntaggedPool1_1+0x131+0x137 -> ""
+				0x881b87a3; UntaggedPool1_1+0x131+0x137 -> "E"
+				0x881b87a2; UntaggedPool1_1+0x131+0x137+0x2 -> "SE"
+				0x881b87a1; UntaggedPool1_1+0x131+0x137+0x1 -> "TSE"
+				0x881b87a0; UntaggedPool1_1+0x131+0x137 -> "ETSE"
+	0x42a		0xf76be500; crackme_drv+7500 ESETConst.Value
+				0xf76be505; crackme_drv+7500+ESETConst.Length -> pointing after ESETConst.Value
+				0xf76be500; crackme_drv+7500 ESETConst.Value
+	0x42e		0x880ecffc; UntaggedPool1_2+0x3FFFFC
+	0x432		0x881b8538; UntaggedPool1_1
+	0x436		0x2b5 ;size of UntaggedPool1_1
+	0x43a		0x804d7000 ;ModuleBase_addr nt!_imp__VidInitialize <PERF>
+	0x43e		0x883b3000; RAM2+0x26000
+	0x442		0x200; pushed value/size at MainCall
+	0x446		0xf76be500; crackme_drv+7500 ESETConst.Value
+	0x44a		0x5 ;ESETConst.Length
+	0x44e		0x881b87df; UntaggedPool1_1+0x131+0x164+0x12
+				0x881b87cd; UntaggedPool1_1+0x131+0x164
+	0x452		0x881b87a4; UntaggedPool1_1+0x131+0x137+0x4 -> pointing after "ETSE"
+				0x881b87a0; UntaggedPool1_1+0x131+0x137 -> "ETSE"
+	0x456		0x881b8538+0x12 = 0x881b854a ;address of UntaggedPool1_1+0x12
+	0x45a		0x881b8538+0x131 = 0x881b8669 ;address of UntaggedPool1_1+0x131
+	0x45e		0x0 ;offset
+	0x462		0x880ecffc; UntaggedPool1_2+0x3FFFFC
+	0x466		0x87ced000; UntaggedPool1_2
+[STACK1]
+----------------------------------------------------------
+Current StackBase: ab37d5b8
+----------------------------------------------------------
+CALLS:
+
+call 8a3bc630 (Call_15)
+call 8a3bc760 (Call_16)
+call 8a3bc320 (Call_22)
+call 8a3bc630 (Call_15)
+call 8a3bc320 (Call_22)
+call 8a3bc320 (Call_22)
+call 8a3bc840 (Call_25)
+call 8a3bc320 (Call_22)
+call 8a3bc320 (Call_22)
+call 8a3bc840 (Call_25)
+call 8a3bc320 (Call_22)
+call 8a3bc840 (Call_25)
+call 8a3bc630 (Call_15)
+call 8a3bc760 (Call_16)
+call 8a3bc630 (Call_15)
+call 8a3bc760 (Call_16)
+call 8a3bc630 (Call_15)
+call 8a3bc760 (Call_16)
+call 8a3bc320 (Call_22)
+call 8a3bc840 (Call_25)
+call 8a3bc840 (Call_25)
+call 8a3bc840 (Call_25)
+call 8a3bc840 (Call_25) -> 0x68
+call 8a3bc320 (Call_22) -> saved 0x68
+call 8a3bc840 (Call_25) crackme_drv+0x7500++
+call 8a3bc840 (Call_25) UntaggedPool7+0x131+0x164++
+call 8a3bc840 (Call_25) UntaggedPool7+0x131+0x137++
+call 8a3bc760 (Call_16)
+call 8a3bc630 (Call_15)
+call 8a3bc760 (Call_16)
+call 8a3bc630 (Call_15)
+call 8a3bc760 (Call_16)
+call 8a3bc630 (Call_15)
+call 8a3bc760 (Call_16)
+call 8a3bc320 (Call_22)
+call 8a3bc840 (Call_25)
+call 8a3bc840 (Call_25)
+call 8a3bc840 (Call_25)
+call 8a3bc840 (Call_25) -> 0x7
+call 8a3bc320 (Call_22) -> saved 0x7
+call 8a3bc840 (Call_25) crackme_drv+0x7500++
+call 8a3bc840 (Call_25) UntaggedPool7+0x131+0x164++
+call 8a3bc840 (Call_25) UntaggedPool7+0x131+0x137++
+.........................................................
+call 8a3bc590 (Call_)
+
+
+-----------------------------------------------------------------------------------------------------------
+[STACK2]
+	address		value
+	{called functions start}
+		0x0			0x8838b300
+		0x1			0x8838b320 -
+		0x2			0x8838b3a0
+		0x3			0x8838b440
+		0x4			0x8838b590 -
+		0x5			0x8838b5f0
+		0x6			0x8838b630 -
+		0x7			0x8838b760 -
+		0x8			0x8838b7e0
+		0x9			0x8838b820
+		0xa			0x8838b840 -
+		0xb			0x8838bd50
+		0xc			0x8838bdd0
+		0xd			0x8838be30
+	{called functions end}
+	0x3FC		0x0; possible FLAG -> moreCalls = true
+	0x3FD		0x8820dc48; UntaggedPool10
+	0x401		0x137: size of UntaggedPool10
+	0x405		0x1; possible FLAG
+	0x409		0x804d7000; ModuleBase_addr nt!_imp__VidInitialize <PERF>
+	0x40D		0x4; non so cosa sia
+	0x411		0x8a2aa250; UntaggedPool9
+	0x415		0x0
+	0x416		0x88225488; UntaggedPool12 size 0x100
+	0x41A
+	0x41E
+	0x422
+	0x426
+	0x42A
+	0x42E		0x87cecffc; UntaggedPool11+0x3FFFFC
+	0x432		0x878ed000; UntaggedPool11
+	0x436		0x137; UntaggedPool11 size
+	0x43A		0x804d7000; ModuleBase_addr nt!_imp__VidInitialize <PERF>
+	0x43E		0x883b3000; RAM2_ADDR
+	0x442		0x200
+	0x446		0x881b829d; UntaggedPool7+0x131+0x164
+	0x44A		0x12
+	0x44E
+	0x452
+	0x456		0x8820dca0, (0x8820dc5a; UntaggedPool10+0x12)
+	0x45A		0x8820dd7f; UntaggedPool10+0x137
+	0x45E		0x0; possible FLAG
+	0x462		0x87cecffc; UntaggedPool11+0x3FFFFC
+	0x466		0x878ed000; UntaggedPool11
+[STACK2]
+
+ab37d0f0

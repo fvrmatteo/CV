@@ -1,0 +1,20 @@
+[*] I knew almost nothing about .NET so I "learned" IL language and used Google to understand the C# calls.
+I used ILSpy to analyze the two files; I also used the reflexil plugin for ILSpy to change variables/class names  -> then I used  Windbg+sosex.dll to debug the code (useful to dump data).
+
+[*] Given the obfuscation used in the files I wrote a little C program to help me follow the flow and decrypt the string on runtime (using reflexil I commented the .NET file with "meaningful" strings/classes name).
+
+[*] One can actually write his own PipeExctrator to dump data from pipe, I did it, but also using Windbg+sosex.dll works fine.
+
+[PuncherMachine.exe]
+There are some anti-debug checks, a Mutex creation to check if only one session is running.
+EsetCrackme2015.exe must be running to exchange data through the pipe.
+At start one must select PunchCard.bmp decrypted through crackme_drv.sys, so new controls come out in the dialogbox.
+I analyzed and dumped all the "pipe communications", retrieving useful data (Hashtables, Lists, CalibrationDynMethod.dll). I also analyzed CalibrationDynMethod.dll to understand what input are necessary to calibrationcode1 & calibrationcode2. Found a dynamic generation of IL code, understood what instructions were missing and what value is needed in calibrationcode2 (I also wrote a bruteforcer to calculate calibrationcode1 & calibrationcode2).
+Once calibrationcode1 & calibrationcode2 are corrent, new controls come out in the dialogbox, a text area and a button.
+I understood the "valid characters" check done to the strings inserted into the textbox. To understand which strings are the correct ones, we should understand PunchCardReader.exe (it retrieves VerifyDynMethod.dll through pipe and generates a method. In the generated method 3 instructions are missing, one can think about which ones or use a bruteforcer - I guessed them and wrote a bruteforcer, more combinations of instructios are fine).
+So we have to insert each 3 instructions in the text area, one per line. For example "mul", "add", "ret". Then clicking "PunchIt" 3 bmp files are created, each one is associated with an instructions.
+
+[PunchCardReader.exe]
+There are some anti-debug checks, a Mutex creation to check if only one session is running.
+EsetCrackme2015.exe must be running to exchange data through the pipe.
+Placing the 3 bmp files just created (the ones corrisponding to the instructions) and clicking "Read punch card", will do the following: VerifyDynMethod.dll is retrieved, "mul"-"add"-"ret" are placed in the generated IL code. The generated method must return TRUE. Then the check is passed and a MessageBox appears to inform us that "Verification passed...", then "OK" is sent through the pipe. Inserting all the 3 passwords into EsetCrackme2015.exe (after "OK" is received) will make a MessageBox popping out saying "Thats all. Congratulations!". (I was expecting something like "You took too much time to solve it, always studying for University!" ahah)

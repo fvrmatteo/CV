@@ -1,0 +1,1 @@
+Really lame deobfuscator (almost not working), I never wrote one, but for the 2/3 files I deobfuscated automatically it worked. I might write a new one, new ideas come to my mind.

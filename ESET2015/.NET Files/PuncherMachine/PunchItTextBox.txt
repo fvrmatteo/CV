@@ -1,0 +1,7 @@
+Available characters:
+0123456789ABCDEFGHIJKLMNOPQR/STUVWXYZabcdefghijklmnopqrstuvwxyz:#@'=".<(+|$*);,%_>? -&
+
+Text to insert: (3 instructions used to complete the IL code of VerifyDynMethod.dll)
+mul
+add
+ret

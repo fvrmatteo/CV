@@ -1,0 +1,1 @@
+This is a little tool I wrote to help me decrypt strings and follow the path into .NET files.

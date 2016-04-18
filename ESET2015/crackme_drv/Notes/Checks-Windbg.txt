@@ -1,0 +1,72 @@
+After analyzing the UntaggedPool1 (created and decrypted by crackme_drv) with IDA, I noticed it is similar to a VM.
+
+[*] UNICODE_STRING length fix: bp crackme_drv+0x1BBF -> set the Length = 0x12 & MaximumLength = 0x14
+typedef struct _UNICODE_STRING {
+  USHORT Length;
+  USHORT MaximumLength;
+  PWSTR  Buffer;
+}
+
+[*] Checks to enter the VM code: 
+	1) check crackme_drv+0x2C3A for LARGE_INTEGER.LowPart > 0x13200
+		cmp eax, value1 (at start value1 = 0x13200 = 78336 = bitmap size)
+		jnb right_path
+	2) check crackme_drv+0x206E for LARGE_INTEGER.LowPart < 0x13200
+		cmp edx, value2
+		jb right_path
+	3) check crackme_drv+0x207C for ESET_FLAG_1 -> the flag is set to 0x1 when ESETConst string registry key is present
+		movzx eax, ESET_FLAG_1
+		test eax, eax
+		jz bad_path
+	4) check crackme_drv+0x2087 for ESET_FLAG_2 -> the flag is set to 0x1 when the pipe communication is active (so EsetCrackme2015.exe must be running)
+		movzx ecx, ESET_FLAG_2
+		test ecx, ecx
+		jz bad_path
+	5) the VM is executed, but before executing (or at the nearly start) the code must be modified
+
+[*] VM "right path" fix: the VM takes different paths based on an initial check (the first one), to take the "right path" there are two options:
+	1) editing a piece of crackme_drv before entering the VM;
+	2) fixing the stack/changing a "cmp" after entering the VM.
+
+	1) editing the code at crackme_drv+0x309C: there are no checksum of the modified piece of code, so it is fine to change it.
+		before:
+			mov [ebp-0Ch], offset ESETConst_Value
+			push offset ESETConst_Value
+			call strlen
+			add esp, 4
+			mov [ebp-8], eax
+		after:
+			mov [ebp-0Ch], 0
+			push 0
+			nop
+			nop
+			nop
+	
+	2) fixing the stack/changing a "cmp" after entering the VM:
+		simply one can put "zero" where ESETConst_Value would have been saved in the stack or can change the result of the cmp.
+
+	I said the are a good and a bad path, here is the initial check in the VM:
+	ESETConst_offset = [eax+edx*4+416h]
+	if(ESETConst_offset == 0) {
+		//sets VM_EIP = 0x8a
+		jmp good_path; -> a series of calls that decrypts the second password "Barbakan Krakowski" and use it to decrypts the bitmap
+	} else {
+		//sets VM_EIP = 0x11e
+		jmp bad_path; -> almost the same calls, but with different input, false password generation
+	}
+	
+	So ESETConst_offset must be 0 to take the good_path, this trick gave me hard times because I was failing to see it :D
+
+[*] VM bitmap decryption:
+r $t0 = "first address of the bmp file to decrypt"
+bp crackme_drv+0x309C "r $t0 = $t0 - 0x200; ed esp $t0; g"
+
+[*] In VirtualBox use HIEW to open RAM2 \\?\GLOBALROOT\Device\45736574 -> press F5 -> write 260001, let the above script decrypts the BMP.
+After the BMP is decrypted search with HIEW for byte "BM" and press "*" at start address, then "*" after 77.886 bytes and save the bitmap with "F2". 	
+Another way to trigger VM execution instead of using HIEW is using dosdev.exe like this: dosdev.exe k: \\?\GLOBALROOT\Device\45736574 -> create a file into the mounted disk k: and the VM is triggered.
+
+//Windbg extra commands used to retrieve information about the VM execution (input used by the VM & calls executed by the VM_loop using "call edx")
+
+[*] VM data: bp VM_start+0x1796 "d edx+415 L1; .if($p == 0x1) {.printf /D \"Saved value: 0x%N\\n\", eax} .else {.printf /D \"Discarded value: 0x%N\\n\", eax}; g"
+
+[*] VM loop calls: bp VM_start+0xAA6 ".printf /D \"Call: 0x%N\\n\", edx; g"

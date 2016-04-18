@@ -1,0 +1,282 @@
+DISCLAIMER: this is only a draft with some (badly written) ideas; I will improve it and release it after finishing my 3rd year thesis.
+
+INTRODUCTION:
+
+A month and a half ago I started to think about better understanding obfuscated and virtualized code. I decided to start analyzing obfuscation techniques used in commercial protectors like VMProtect or Themida. The sure thing is that understanding a Virtual Machine with an extra layer of assembly obfuscation on top of it is quite a pain (and it is not much simpler after removing obfuscation, but I have to dig deeper into it). The obvious consequence was to code a deobfuscator for x86/x64 assembly, and this is how I started my journey. I took a look at available researches (found quite interesting articles on Tust4You) and experimented a bit with known techniques like: Dead Code Elimination & Constant Folding/Propagation. I can say for sure that many researches only repeats previously known things about code simplification/optimization used by compilers. In the past years compilers techniques were applied to simplify code but to be honest I didn't found a complete article about a real deobfuscation process, nor an open source deobfuscator for x86/x64 assembly. To get a quick start I'll show an example for each basic technique: Dead Code Elimination, Constant Propagation & Peephole Optimization; I will not go into details, other articles explain them extensively.
+
+- A basic example of Dead Code Elimination is the following:
+
+mov rax, 0x666
+add rax, 0x13
+lahf
+sub rax, 0x17
+cwde
+mov rax, 0x777
+
+It is quite obvious that at the end rax will take the value 0x777 and all the previous instructions are useless and so removable. Implementing code elimination would require to check for registers (READ/WRITE) so it is fairly simple to decide when a register assignation/modification can be removed because it doesn't affect the global code flow. Code elimination is usually aimed to find and remove nop-like instructions (like useless assignation, modification and unused flag operations).
+
+- A basic example of Constant Propagation is the following:
+
+mov rax, 0x1
+add rax, 0x77
+shl rax, 0x2
+dec rax
+add rax, 0x598
+
+What about this "mess"? These are pretty useless instructions because can be reduced to a single instruction "mov rax, 0x777". Code emulation is involved to simplify them, the rax value is calculated and updated instruction by instruction.
+
+Another example, with a different propagation from the previous one is:
+
+mov rax, 0x777
+mov rdx, rax
+mov [rsp], rdx
+
+We know from the first instruction that rax takes 0x777 as value, then it is moved on rdx (so also rdx is 0x777 now) and then rdx is saved on [rsp], but we can easily propagate the 0x777 constant to reach this result:
+
+mov rax, 0x777
+mov rdx, 0x777
+mov [rsp], 0x777
+
+And to this code maybe we can apply further optimizations based on the whole code behaviour.
+
+- A basic example of Peephole Optimization is the following:
+
+push rdx
+mov [rsp], 0x777
+
+We can think of Peephole Optimization as a pattern matching technique aimed to replace known patterns with simpler or faster ones (it all depends on the final results you want, in this case we need the code to be simple to read and understand). So the 2 instructions above can be replaced with the single instruction "push 0x777".
+
+Another example, involving a different pattern is:
+
+mov [esp], edx
+pop rdx
+
+It can be reduced to "add rsp, 8" because the rdx register is not modified at all. We can find many pattern and simplification pairs, but handling them would mean a lot of code and to be constantly informed about new obfuscation patterns (something I personally don't like if it can be solved in a different way). It sure can be an alternative technique and is always useful to use it.
+
+Of the 3 simple techniques we saw, we can draw a line between generic and pattern based deobfuscation. A generic algorithm is always preferable to a pattern-based one (at least talking about deobfuscation).
+I must admit I've analyzed a small number of obfuscated code blocks, mostly because I had a clear idea of how problematic obfuscation can be after looking at Themida code. After reading the articles I found I decided to look for available open source deobfuscators but only found abandoned ones. On Tuts4You an Ollydbg plugin caught my attention, its name is CodeDoctor. I must say that I'm impressed with the results but it has some major limitations (not solved since 2010):
+
+* it is only for x86 assembly (and in 2015 we must think about x64 assembly too);
+* it is closed source and the coder never released information about it (if you want to fix or update it, you have to reverse it, and this requires time);
+* it is based on pattern-matching partially (I'm not 100% sure, but analyzing the deobfuscated code I can see known simplifications);
+* it misses some obvious simplification or the resulting code is not deobfuscated enough (but it still removes big blocks of junk);
+* sometimes it fails to deobfuscate the code, and this is a big problem, because searching for the error in 500 assembly line is time consuming;
+
+Testing it on obfuscated assembly with junk, nop-like & arithmetic-mess instructions works pretty well, but the pain started testing it on obfuscated code involving heavy stack manipulation (Themida or stack based VM protectors usually involve heavily stack modification). When I was lucky the reduced code was correct but still too difficult to understand, when I was unlucky the deobfuscated code was wrong (1/2 wrong instructions, but still).
+
+STACK EXPANSION/REDUCTION:
+
+So I started coding one myself, implemented a first version of basic techniques (Dead Code Elimination, Constant Propagation & Peephole Optimization). My idea was to find a way to simplify code without the need of pattern-matching simplification, and most of all I needed an idea to handle in a solid & reliable way the heavy stack use. I came up with a pretty simple solution that completely changed my idea about stack obfuscation. I'm going to describe it with some examples.
+
+First of all, the papers I saw always talked about code reduction, but I decided to expand the code instead :D the reason is quite simple, I found some rules to expand stack instructions and convert them only to MOVs/LEAs and ADD/SUB of the stack register. The rules are the following for x86 (same for x64 with some register/displacement change):
+
+1)
+  Before:
+    PUSH IMM/REG
+  After:
+    MOV [ESP-4], IMM/REG
+    SUB ESP, 4
+
+2)
+  Before:
+    PUSH [ESP+REG+DISP]
+  After:
+    MOV [ESP-0x400], EAX
+    MOV RAX, [ESP+REG+DISP]
+    MOV [ESP-4], RAX
+    MOV RAX, [ESP-0x400]
+    SUB ESP, 4
+
+3)
+  Before:
+    POP REG
+  After:
+    ADD ESP, 4
+    MOV REG, [ESP-4]
+
+4)
+  Before:
+    POP [ESP+REG+DISP]
+  After:
+    MOV [ESP-0x400], EAX
+    MOV EAX, [ESP+REG+DISP]
+    MOV [ESP+4], EAX
+    MOV EAX, [ESP-0x400]
+    ADD ESP, 4
+
+5)
+  Before:
+    MOV REG, ESP
+  After:
+    LEA REG, [ESP]
+
+6)
+  Before:
+    MOV [ESP+REG+DISP], ESP
+  After:
+    MOV [ESP-0x400], EAX
+    LEA EAX, [ESP]
+    MOV [ESP+REG+DISP], EAX
+    MOV EAX, [ESP-0x400]
+
+7)
+  Before:
+    XCHG REG1, REG2
+  After:
+    MOV [ESP-0x400], REG2
+    MOV REG2, REG1
+    MOV REG1, [ESP-0x400]
+
+8)
+  Before:
+    XCHG [ESP+REG+DISP], REG1
+  After:
+    MOV [ESP-0x400], REG2
+    MOV REG2, [ESP+REG+DISP]
+    MOV [ESP+REG+DISP], REG1
+    MOV REG1, REG2
+    MOV REG2, [ESP-0x400]
+
+Additional rules (dealing with unsafe Intel Assembly Instructions):
+
+9)
+  Before:
+    PUSH SEG
+  After:
+    MOV [ESP-4], SEG
+    SUB ESP, 4
+
+10)
+  Before:
+    PUSHF
+  After:
+    MOV [ESP-4], EFLAGS
+    SUB ESP, 4
+
+11)
+  Before:
+    PUSHAL (Intel Manual: PUSHAD)
+  After:
+    MOV [ESP-0x20], EDI
+    MOV [ESP-0x1C], ESI
+    MOV [ESP-0x18], EBP
+    MOV [ESP-0x14], ESP
+    MOV [ESP-0x10], EBX
+    MOV [ESP-0xC], EDX
+    MOV [ESP-0x8], ECX
+    MOV [ESP-0x4], EAX
+    SUB ESP, 0x20
+
+12)
+  Before:
+    POP SEG
+  After:
+    ADD ESP, 4
+    MOV SEG, [ESP-4]
+
+13)
+  Before:
+    POPF
+  After:
+    ADD ESP, 4
+    MOV EFLAGS, [ESP-4]
+
+14)
+  Before:
+    POPAL (Intel Manual: POPAD)
+  After:
+    ADD ESP, 0x20
+    MOV EDI, [ESP-0x20]
+    MOV ESI, [ESP-0x1C]
+    MOV EBP, [ESP-0x18]
+    MOV ESP, [ESP-0x14]
+    MOV EBX, [ESP-0x10]
+    MOV EDX, [ESP-0xC]
+    MOV ECX, [ESP-0x8]
+    MOV EAX, [ESP-0x4]
+
+This is not pattern matching, but instruction expansion and, as you can see, the idea is to have a clear look at which stack locations are accessed and how the ESP/RSP register is modified during execution.
+
+An expansion example is the following:
+
+Before:
+  MOV EAX, 0x444
+  PUSH EAX          ;this instruction will be expanded with rule 1
+  ADD [ESP], 0x333
+  POP EAX           ;this instruction will be expanded with rule 3
+
+After:
+  MOV EAX, 0x444
+  MOV [ESP-4], EAX
+  SUB ESP, 4
+  ADD [ESP], 0x333
+  ADD ESP, 4
+  MOV EAX, [ESP-4]
+
+We can apply Constant Propagation to ESP (but also to other registers) to clean things a little more:
+
+After:
+  MOV EAX, 0x444
+  MOV [ESP-4], 0x444
+  ADD [ESP-4], 0x333
+  MOV EAX, [ESP-4]
+  SUB ESP, 4
+  ADD ESP, 4
+
+Obviously the last 2 instructions affecting the ESP register can be transformed into "ADD ESP, 0" or "SUB ESP, 0" and thus deleted. Generally speaking as last instruction you will have a SUB/ADD to ESP/RSP register, this indicates the maximum (positive or negative) displacement of the stack from the block code start (this means that "SUB ESP, 8" is equals to say that the stack locations SS:[ESP-4] and SS:[ESP-8] are modified permanently during the code execution); this can be helpful to know which stack instructions maintain or remove. But most importantly looking at the previous code you can immediately identify instructions affecting a particular stack address (for example [ESP-4]) and work on it with standard deobfuscation techniques. So after applying Dead Code Elimination & what I called Stack Propagation you will have:
+
+Before:
+  MOV EAX, 0x444        ;removed because EAX is overwritten before being READ again
+  MOV [ESP-4], 0x444
+  ADD [ESP-4], 0x333    ;you can apply Stack Propagation to it
+  MOV EAX, [ESP-4]
+  ADD ESP, 0            ;removable because it does not change ESP, adding or subtracting 0 to a value doesn't change it
+
+After:
+  MOV [ESP-4], 0x777    ;emulated value: 0x444 + 0x333 = 0x777
+  MOV EAX, [ESP-4]
+
+At this point you can apply various optimizations, in this case you can see the stack location SS:[ESP-4] being used only to calculate the 0x777 value, that is than placed into EAX. We are not interested in negative stack modifications (this is an hypothesis on which each research I saw is based on), so we can drop (and simplify) the WRITE to [ESP-4] (in this case the instruction MOV [ESP-4], 0x777). The good thing is that you can easily keep track of modified stack addresses and if you want you can keep also negative stack modifications, like a write to [ESP-0x10]. The last thing I said is really important and easily done with my stack expansion, because an intelligent programmer who is going to code a protection will try to use as many tricks as possible, like using negative stack locations to save important data.
+
+The fully deobfuscated code follows:
+
+Before:
+  MOV EAX, 0x444
+  PUSH EAX
+  ADD [ESP], 0x333
+  POP EAX
+
+After:
+  MOV EAX, 0x777
+
+I think this is pretty nice because it is simple and versatile. I can be blind but I didn't see this optimization being explained on the papers I read and most importantly I'm almost sure it is not used by CodeDoctor, in fact I will show examples of deobfuscated code by CodeDoctor and by my horrible & unstable deobfuscator :) As a side note, a friend of mine (SmilingWolf) told me the expanded disassembly looks like MinGW assembly listing so I'm sure this expansion is something like MinGW one, but I have to look into it better. The deobfuscator I coded uses Capstone Next (as main disassembly engine) & Unicorn (as code emulator); I heavily used them because they are simply great and in the next weeks I hope to fix some bugs I found while working with them. My project is really in alpha stage and it needs a complete rewrite (it is coded in C but I will re-code it in C++ I think).
+
+My project needs:
+
+* a complete rewrite and code check by expert coders;
+* tests, a lot of them, it surely misses features and optimizations techniques can be improved alot;
+* a long and deep fuzzing test phase, parsers are always prone to errors (especially when coded fast to get something done asap);
+* an intelligent way to track & dump code from debugged processes (in fact I plan to release it as x64dbg plugin);
+* many other things I forgot to mention, this document is only an overview.
+
+DEOBFUSCATION EXAMPLES:
+
+1)  My Project: http://pastebin.com/EW5QziaV
+    CodeDoctor: http://pastebin.com/bxT7xRLj
+
+2)  My Project: http://pastebin.com/LQWf8sS4
+    CodeDoctor: http://pastebin.com/iafnCqsk
+
+3)  My Project: http://pastebin.com/sxngqSYg
+    CodeDoctor: x64 not supported by CodeDoctor
+
+THANKS
+
+- SmilingWolf, that is supporting me so much & helps me think about solutions (check out his profile on Tuts4You);
+- Caleb, always available to listen and talk (check out his "Simplify": https://github.com/CalebFenton/simplify);
+- Hasherezade, that kindly accepted to read this paper and check it;
+- Capstone & Unicorn maintainers, you are awesome :)
+
+FINAL NOTE: I know this draft is far from complete and clear, forgive me, I'll try to improve it but first of all I'll do my best to make the deobfuscator stable and features reach.
+
+@fvrmatteo
